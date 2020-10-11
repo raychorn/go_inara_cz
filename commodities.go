@@ -39,3 +39,17 @@ func CommoditiesAsString() string {
     return b.String()
 }
 
+// CommodityNameByValue ...
+func CommodityNameByValue(theValue int) string {
+    items := map[int]string{}
+
+    for key, value := range Commodities {
+        items[value] = key
+    }
+
+    theKey, ok := items[theValue]
+    if (!ok) {
+        theKey = ""
+    }
+    return theKey
+}

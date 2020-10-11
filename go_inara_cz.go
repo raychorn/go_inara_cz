@@ -41,12 +41,10 @@ Echo works a lot like print, except it has a child command.`,
       cItems := Commodities
       fmt.Printf("cItems = %s\n", CommoditiesAsString())
       tritium := cItems["Tritium"]
-      fmt.Printf("tritium = %d\n", tritium)
-      /*
-      fmt.Printf("tritium = %s\n", EnumAsString(tritium))
-      fmt.Println(Scraper(url))
-      */
+      cName := CommodityNameByValue(tritium)
+      fmt.Printf("%s --> %d\n", cName, tritium)
       fmt.Println("Scrape: " + url)
+      fmt.Println(Scraper(url))
     },
   }
 
