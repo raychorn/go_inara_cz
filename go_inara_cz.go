@@ -6,7 +6,7 @@ import (
 	"strings"
 	scraper "webscraper"
 
-  cobra "github.com/spf13/cobra"
+	cobra "github.com/spf13/cobra"
 )
 
 func main() {
@@ -48,7 +48,7 @@ Echo works a lot like print, except it has a child command.`,
 
   var cmdScrapeCommodities = &cobra.Command{
     Use:   "scrapecommodities [url string]",
-    Short: "Scrape Commodities using a url - must reference inara.cz",
+    Short: "Scrape Commodities using default built-in",
     Long: `scrape commodities via inara.cz url.`,
     Args: cobra.MinimumNArgs(0),
     Run: func(cmd *cobra.Command, args []string) {
