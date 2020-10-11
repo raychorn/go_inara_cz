@@ -45,10 +45,22 @@ a count and a string.`,
     },
   }
 
+    var cmdScrape = &cobra.Command{
+    Use:   "scrape [url string]",
+    Short: "Scrape using a url - must reference inara.cz",
+    Long: `scrape an inara.cz url.`,
+    Args: cobra.MinimumNArgs(1),
+    Run: func(cmd *cobra.Command, args []string) {
+      scrapeinaracz.scraper()
+      fmt.Println("Scrape: " + strings.Join(args, " "))
+    },
+  }
+
   cmdTimes.Flags().IntVarP(&echoTimes, "times", "t", 1, "times to echo the input")
 
-  var rootCmd = &cobra.Command{Use: "main"}
+  var rootCmd = &cobra.Command{Use: "go_inara_cz"}
   rootCmd.AddCommand(cmdPrint, cmdEcho)
   cmdEcho.AddCommand(cmdTimes)
+  cmdEcho.AddCommand(cmdScrape)
   rootCmd.Execute()
 }
