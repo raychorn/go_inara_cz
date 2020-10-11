@@ -6,7 +6,7 @@ import (
 	"strings"
 	scraper "webscraper"
 
-	"github.com/spf13/cobra"
+  cobra "github.com/spf13/cobra"
 )
 
 func main() {

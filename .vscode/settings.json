@@ -1,5 +1,5 @@
 {
-    "go.inferGopath": false,
+    "go.inferGopath": true,
     "editor.codeActionsOnSave": {
         "source.organizeImports": false
     }
