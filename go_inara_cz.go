@@ -1,10 +1,8 @@
 package main
 
 import (
-	refid "enums"
 	"fmt"
 	"strings"
-	scraper "webscraper"
 
 	cobra "github.com/spf13/cobra"
 )
@@ -39,10 +37,16 @@ Echo works a lot like print, except it has a child command.`,
     Args: cobra.MinimumNArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
       url := strings.Join(args, " ")
-      tritium := refid.Enum.Tritium
-      fmt.Printf("tritium = %s\n", refid.String(tritium))
+      NewCommodities()
+      cItems := Commodities
+      fmt.Printf("cItems = %s\n", CommoditiesAsString())
+      tritium := cItems["Tritium"]
+      fmt.Printf("tritium = %d\n", tritium)
+      /*
+      fmt.Printf("tritium = %s\n", EnumAsString(tritium))
+      fmt.Println(Scraper(url))
+      */
       fmt.Println("Scrape: " + url)
-      fmt.Println(scraper.Scraper(url))
     },
   }
 
@@ -57,7 +61,7 @@ Echo works a lot like print, except it has a child command.`,
       }
       url := "https://inara.cz/galaxy-commodities/"
       fmt.Println("Scrape Commodities: " + url)
-      fmt.Println(scraper.ScrapeCommodities(url))
+      fmt.Println(ScrapeCommodities(url))
     },
   }
 
