@@ -46,6 +46,21 @@ Echo works a lot like print, except it has a child command.`,
     },
   }
 
+  var cmdScrapeCommodities = &cobra.Command{
+    Use:   "scrapecommodities [url string]",
+    Short: "Scrape Commodities using a url - must reference inara.cz",
+    Long: `scrape commodities via inara.cz url.`,
+    Args: cobra.MinimumNArgs(0),
+    Run: func(cmd *cobra.Command, args []string) {
+      if (len(args) > 0) {
+        fmt.Println("No need to use an argument for this command.")
+      }
+      url := "https://inara.cz/galaxy-commodities/"
+      fmt.Println("Scrape Commodities: " + url)
+      fmt.Println(scraper.ScrapeCommodities(url))
+    },
+  }
+
   // go run ./go_inara_cz.go scrape "url"
   // commodities_buymin_url = "https://inara.cz/ajaxaction.php?act=goodsdata&refname=buymin&refid={}&refid2={}".format(commodity_refid, star_system_refid)
   // commodities_sellmax_url = "https://inara.cz/ajaxaction.php?act=goodsdata&refname=sellmax&refid={}&refid2={}".format(commodity_refid, star_system_refid)
@@ -54,5 +69,6 @@ Echo works a lot like print, except it has a child command.`,
   var rootCmd = &cobra.Command{Use: "go_inara_cz"}
   rootCmd.AddCommand(cmdPrint, cmdEcho)
   rootCmd.AddCommand(cmdScrape)
+  rootCmd.AddCommand(cmdScrapeCommodities)
   rootCmd.Execute()
 }
