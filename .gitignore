@@ -1,6 +1,9 @@
+!.gitignore
 *.go-darwin-amd64
 *.go-windows*.exe
 *.go-linux*
-vendor/github.com/*
 go.sum
 modules.txt
+vendor/github.com/inconshreveable
+vendor/github.com/spf13
+!vendor/webscraper/
