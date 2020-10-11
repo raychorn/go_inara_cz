@@ -1,6 +1,7 @@
 package main
 
 import (
+	refid "enums"
 	"fmt"
 	"strings"
 	scraper "webscraper"
@@ -38,13 +39,18 @@ Echo works a lot like print, except it has a child command.`,
     Args: cobra.MinimumNArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
       url := strings.Join(args, " ")
+      tritium := refid.Enum.Tritium
+      fmt.Printf("tritium = %s\n", refid.String(tritium))
       fmt.Println("Scrape: " + url)
       fmt.Println(scraper.Scraper(url))
     },
   }
 
   // go run ./go_inara_cz.go scrape "url"
-  
+  // commodities_buymin_url = "https://inara.cz/ajaxaction.php?act=goodsdata&refname=buymin&refid={}&refid2={}".format(commodity_refid, star_system_refid)
+  // commodities_sellmax_url = "https://inara.cz/ajaxaction.php?act=goodsdata&refname=sellmax&refid={}&refid2={}".format(commodity_refid, star_system_refid)
+
+
   var rootCmd = &cobra.Command{Use: "go_inara_cz"}
   rootCmd.AddCommand(cmdPrint, cmdEcho)
   rootCmd.AddCommand(cmdScrape)
