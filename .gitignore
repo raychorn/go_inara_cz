@@ -4,6 +4,3 @@
 *.go-linux*
 go.sum
 modules.txt
-vendor/github.com/inconshreveable
-vendor/github.com/spf13
-!vendor/webscraper/
