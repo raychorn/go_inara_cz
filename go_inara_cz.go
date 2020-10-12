@@ -37,9 +37,9 @@ Echo works a lot like print, except it has a child command.`,
     Args: cobra.MinimumNArgs(0),
     Run: func(cmd *cobra.Command, args []string) {
       //url := strings.Join(args, " ")
-      NewCommodities()
+      NewCommodities(false)
       cItems := Commodities
-      fmt.Printf("cItems = %s\n", CommoditiesAsString())
+      //fmt.Printf("cItems = %s\n", CommoditiesAsString())
       tritium := cItems["Tritium"]
       cName := CommodityNameByValue(tritium)
       fmt.Printf("%s --> %d\n", cName, tritium)
