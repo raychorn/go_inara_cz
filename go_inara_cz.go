@@ -31,20 +31,19 @@ Echo works a lot like print, except it has a child command.`,
   }
 
   var cmdScrape = &cobra.Command{
-    Use:   "scrape [url string]",
-    Short: "Scrape using a url - must reference inara.cz",
-    Long: `scrape an inara.cz url.`,
-    Args: cobra.MinimumNArgs(1),
+    Use:   "scrape",
+    Short: "Scrape via inara.cz",
+    Long: `scrape an inara.cz url using the standard url.`,
+    Args: cobra.MinimumNArgs(0),
     Run: func(cmd *cobra.Command, args []string) {
-      url := strings.Join(args, " ")
+      //url := strings.Join(args, " ")
       NewCommodities()
       cItems := Commodities
       fmt.Printf("cItems = %s\n", CommoditiesAsString())
       tritium := cItems["Tritium"]
       cName := CommodityNameByValue(tritium)
       fmt.Printf("%s --> %d\n", cName, tritium)
-      fmt.Println("Scrape: " + url)
-      fmt.Println(Scraper(url))
+      fmt.Printf("Scrape: %d items\n", len(cItems))
     },
   }
 
@@ -57,7 +56,7 @@ Echo works a lot like print, except it has a child command.`,
       if (len(args) > 0) {
         fmt.Println("No need to use an argument for this command.")
       }
-      url := "https://inara.cz/galaxy-commodities/"
+      url := CommoditiesURL
       fmt.Println("Scrape Commodities: " + url)
       fmt.Println(ScrapeCommodities(url))
     },

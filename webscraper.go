@@ -37,7 +37,6 @@ func exampleScrape(someURL string) {
   })
 }
 
-
 // ScrapeCommodities ...
 func ScrapeCommodities(url string) string {
 	exampleScrape(url)

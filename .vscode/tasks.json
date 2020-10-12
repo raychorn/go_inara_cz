@@ -4,7 +4,7 @@
         {
             "label": "Run",
             "type": "shell",
-            "command": "go run *.go scrapecommodities",
+            "command": "go run *.go scrape", // scrapecommodities
             "group": {
                 "kind": "build",
                 "isDefault": true
