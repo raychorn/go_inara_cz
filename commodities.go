@@ -2,15 +2,62 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
+
+	//validator "github.com/asaskevich/govalidator"
 
 	"github.com/PuerkitoBio/goquery"
 )
+
+// CommodityDataJSON ...
+type CommodityDataJSON struct {
+	ID int    `json:"id"`
+	Name  string `json:"name"`
+}
+
+func importFromJSON(fname string) map[string]CommodityDataStruct {
+    fmt.Printf("DEBUG: importFromJSON(%s)\n", fname)
+    rawJSON, _ := ioutil.ReadFile(fname)
+    data := make(map[string]CommodityDataStruct)
+    _ = json.Unmarshal([]byte(rawJSON), &data)
+    return data
+}
+
+
+func exportAsJSON(items map[string]int) {
+    n := len(items)
+    datas := make(map[string]CommodityDataJSON, n)
+
+	for k,v := range items {
+        datas[k] = CommodityDataJSON{Name: k, ID: v}
+        datas[fmt.Sprint(v)] = datas[k]
+	}
+    jsonString, err := json.Marshal(datas)
+    if err != nil {
+        log.Fatal(err)
+    }
+    now := time.Now()
+    tsNow := strings.ReplaceAll(strings.ReplaceAll(now.Format(time.RFC3339), "-", "_"), ":", "")
+    fmt.Printf("DEBUG: tsNow = %s\n", tsNow)
+    //fmt.Printf("DEBUG: jsonString-->:%s\n", jsonString)
+    fname := fmt.Sprintf("./inaracz_commodities-%s.json", tsNow)
+    fmt.Printf("DEBUG: fname = %s\n", fname)
+    err = ioutil.WriteFile(fname, jsonString, os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 // TimeoutDialer ...
 func TimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
@@ -35,7 +82,7 @@ func NewTimeoutClient(connectTimeout time.Duration, readWriteTimeout time.Durati
 }
 
 func closeDataChannel (dataChan chan<- map[string]int) {
-	data := make(commodityItems)
+	data := make(map[string]int)
 	data["--DONE--"] = -1
 	dataChan <- data
 }
@@ -83,57 +130,171 @@ func GoScrape(someURL string, isVerbose bool, dataChan chan<- map[string]int) {
     })
 }
 
+func fileinfoObj(info os.FileInfo) map[string]interface{} {
+    return map[string]interface{}{
+            "Name":    info.Name(),
+            "Size":    info.Size(),
+            "Mode":    info.Mode(),
+            "ModTime": info.ModTime(),
+            "IsDir":   info.IsDir(),
+        }
+}
 
-type commodityItems = map[string]int
+// GetCommoditiesDataFileNames ...
+func GetCommoditiesDataFileNames(isVerbose bool) map[string]map[string]interface{} {
+    var foundFiles = make(map[string]map[string]interface{})
+    var re = regexp.MustCompile(`(?m)^inaracz_commodities-(?P<ts>\d+_\d+_\d+T\d+_\d+)\.json$`)
+
+    cutoff := 24 * time.Hour * 7
+    //cutoff = 1 * time.Second
+    root := "."
+    now := time.Now()
+    err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+        match := re.FindAllString(path, -1)
+        if (len(match) > 0) {
+            fInfo := fileinfoObj(info)
+            if diff := now.Sub(info.ModTime()); diff <= cutoff {
+                foundFiles[path] = fInfo
+            } else {
+                fmt.Printf("DEBUG: Deleting \"%s\"", path)
+                err := os.Remove(path) 
+                if err != nil { 
+                    log.Fatal(err) 
+                }                 
+            }
+        }
+        return nil
+    })
+    if err != nil {
+        panic(err)
+    }
+    if (isVerbose) {
+        fmt.Println("DEBUG: BEGIN: (2)")
+        for k, v := range foundFiles {
+            json, _ := json.Marshal(v)
+            fmt.Printf("DEBUG: %s --> %s\n", k, json)
+        }
+        fmt.Println("DEBUG: END!!! (2)")
+        fmt.Println()
+    }
+
+    return foundFiles
+}
+
+func keysFromFilesInterface(data map[string]map[string]interface{}) []string {
+    keys := make([]string, 0, len(data))
+    for k := range data {
+        keys = append(keys, k)
+    }
+    return keys
+}
+
+
+// DoesCommoditiesDataExist ...
+func DoesCommoditiesDataExist() (bool, map[string]map[string]interface{}) {
+    files := GetCommoditiesDataFileNames(false)
+    return len(files) > 0, files
+}
+
+func dumpCommoditiesData(data map[string]CommodityDataStruct) {
+    fmt.Println("DEBUG:  BEGIN: dumpCommoditiesData")
+    for k,v := range data {
+        json, _ := json.Marshal(v)
+        fmt.Printf("%s --> %s\n", k, json)
+    }
+    fmt.Println("DEBUG:  END!!! dumpCommoditiesData")
+}
 
 // Commodities ...
-var Commodities commodityItems
+var Commodities map[string]int
+// CommoditiesByValue ...
+var CommoditiesByValue map[int]string
 
 //CommoditiesURL ...
 var CommoditiesURL string = "https://inara.cz/galaxy-commodities/"
 
+
+// CommodityDataStruct ...
+type CommodityDataStruct struct {
+	id int
+	name  string
+}
+
+
+// GetCommoditiesData ...
+func GetCommoditiesData(data map[string]CommodityDataStruct) {
+    Commodities = make(map[string]int)
+    CommoditiesByValue = make(map[int]string)
+    for k,v := range data {
+        if (AreAllDigits(k)) {
+            CommoditiesByValue[v.id] = v.name
+        } else {
+            Commodities[v.name] = v.id
+        }
+        json, _ := json.Marshal(v)
+        fmt.Printf("%s --> %s\n", k, json)
+    }
+}
+
+
 // NewCommodities ...
 func NewCommodities(isVerbose bool) {
-    Commodities= make(commodityItems)
-    dataChan := make(chan map[string]int, 1)
-    go GoScrape(CommoditiesURL, isVerbose, dataChan)
+    Commodities = make(map[string]int)
+    hasFiles, files := DoesCommoditiesDataExist()
+    if (hasFiles) {
+        keys := keysFromFilesInterface(files)
+        data := importFromJSON(keys[0])
+        dumpCommoditiesData(data)
+        GetCommoditiesData(data)
+        fmt.Println("DEBUG: Found the data.")
+    } else {
+        dataChan := make(chan map[string]int, 1)
+        go GoScrape(CommoditiesURL, isVerbose, dataChan)
 
-    isDone := false
-    for i := 0; !isDone; i++ {
-        select {
-            case data, ok := <- dataChan:
-                if (!ok) {
-                    isDone = true
-                    return
-                }
-                for k,v := range data {
-                    if (k == "--DONE--") && (v == -1) { 
+        isDone := false
+        for i := 0; !isDone; i++ {
+            select {
+                case data, ok := <- dataChan:
+                    if (!ok) {
                         isDone = true
-                        return
+                        log.Fatal("ERROR: Could not retrieve the whole data-set for commodities.")
+                        break
                     }
-                    if (isVerbose) {
-                        fmt.Printf("NewCommodities :: %s --> %d\n", k, v)
+                    for k,v := range data {
+                        if (k == "--DONE--") && (v == -1) { 
+                            isDone = true
+                            break
+                        }
+                        if (isVerbose) {
+                            fmt.Printf("NewCommodities :: %s --> %d\n", k, v)
+                        }
+                        Commodities[k] = v
+                        if (isVerbose) {
+                            fmt.Printf("NewCommodities :: Num items %d\n", len(Commodities))
+                        }
                     }
-                    Commodities[k] = v
-                    if (isVerbose) {
-                        fmt.Printf("NewCommodities :: Num items %d\n", len(Commodities))
-                    }
-                }
-        }
-        if (isDone) {
-            if (isVerbose) {
-                fmt.Printf("NewCommodities :: isDone = %t\n", isDone)
             }
-            break
+            if (isDone) {
+                if (isVerbose) {
+                    fmt.Printf("NewCommodities :: isDone = %t\n", isDone)
+                }
+                break
+            }
         }
-    }
-    if (!isDone) {
+        if (!isDone) {
+            if (isVerbose) {
+                fmt.Printf("NewCommodities :: Loop ended. (%t)\n", isDone)
+            }
+        }
         if (isVerbose) {
-            fmt.Printf("NewCommodities :: Loop ended. (%t)\n", isDone)
+            fmt.Printf("NewCommodities :: Num items %d\n", len(Commodities))
         }
-    }
-    if (isVerbose) {
-        fmt.Printf("NewCommodities :: Num items %d\n", len(Commodities))
+        fmt.Printf("DEBUG: (%t)\n", isDone)
+        if (isDone) {
+            fmt.Println("JSON :: BEGIN")
+            exportAsJSON(Commodities)
+            fmt.Println("JSON :: END!!!")
+        }
     }
 }
 
@@ -161,13 +322,7 @@ func CommoditiesAsString() string {
 
 // CommodityNameByValue ...
 func CommodityNameByValue(theValue int) string {
-    items := map[int]string{}
-
-    for key, value := range Commodities {
-        items[value] = key
-    }
-
-    theKey, ok := items[theValue]
+    theKey, ok := CommoditiesByValue[theValue]
     if (!ok) {
         theKey = ""
     }
